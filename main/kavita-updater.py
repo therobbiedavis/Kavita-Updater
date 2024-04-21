@@ -6,6 +6,7 @@ import shutil
 import os
 import subprocess
 import progressbar
+import psutil
 
 pbar = None
 
@@ -108,7 +109,7 @@ def download(url, filename, bar):
     urlretrieve(url, filename, bar)
 
 
-def extract_tar(filename, exclusion, destPath):
+def extract_tar(filename, exclusion, destpath):
     """extracts the tar file
     :param filename: Name of file/folder to extract
     :param exclusion: Name of file/folder to exclude from extraction
@@ -122,8 +123,35 @@ def extract_tar(filename, exclusion, destPath):
         #check the excluding file condition.
         if exclusion in name:
             continue
-        file.extract(name, destPath)
+        file.extract(name, destpath)
     file.close()
+
+
+def check_if_running(procname):
+    """Determines if the process is running
+    :param procname: Name of file to compare
+    :return: "True" if running or "False" if not running
+    """
+    for proc in psutil.process_iter():
+        # check whether the process name matches
+        if proc.name() == procname:
+            return True
+        else:
+            return False
+
+
+def exit_kavita(procname):
+    """Terminates specified filename (Windows only for now)
+    :param procname: Name of file to compare
+    :return: "True" if terminated successfully or "False" if not terminated
+    """
+    for proc in psutil.process_iter():
+        # check whether the process name matches
+        if proc.name() == procname:
+            proc.kill()
+            return True
+        else:
+            return False
 
 
 def main():
@@ -134,6 +162,20 @@ def main():
     filename = f'kavita-{version}.tar.gz'
     source_dir = './Kavita'
     target_dir = '.'
+    procname = "Kavita.exe"
+
+    print('Checking if Kavita is running...')
+    if check_if_running(procname):
+        print('Kavita is running. Need to exit to continue...')
+        print('Exiting Kavita in order to update')
+        if exit_kavita(procname):
+            print('Kavita exited, proceeding with update')
+        else:
+            print('Can not close Kavita. Update Stopped.')
+            k = input("press enter to exit")
+            exit(1)
+    else:
+        print('Kavita not running. Continuing update...')
 
     print(f'Downloading latest Kavita release ({version}) for {build[0]} {build[1]}...')
     download(url, filename, show_progress)
