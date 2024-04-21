@@ -144,11 +144,13 @@ def main():
     print('Extraction complete.')
 
     print('Installing update files...')
+    # Using copy to workaround "permission" and "already exist" errors.
     shutil.copytree(source_dir, target_dir, dirs_exist_ok = True)
 
     print('Update files installed.')
 
     print('Removing temporary files...')
+    # Ignoring errors due to update files still being in temp directory and therefore not empty.
     shutil.rmtree(source_dir, ignore_errors=False, onerror=None)
     os.remove(filename)
 
